@@ -42,7 +42,7 @@ const authProvider = {
                 }
             })
             .then(response => {
-                localStorage.setItem('user', JSON.stringify(response.user))
+                localStorage.setItem('auth', JSON.stringify(response.user))
             })
             .catch((err) => {
                 console.error(err)
@@ -52,14 +52,14 @@ const authProvider = {
     // called when the API returns an error
     checkError: (error) => {
         if (error.status === 401 || error.status === 403) {
-            localStorage.removeItem('user')
+            localStorage.removeItem('auth')
             return Promise.reject({ redirectTo: '/credentials-required' })
         }
         // other error code (404, 500, etc): no need to log out
         return Promise.resolve()
     },
     // called when the user navigates to a new location, to check for authentication
-    checkAuth: () => localStorage.getItem('user')
+    checkAuth: () => localStorage.getItem('auth')
         ? Promise.resolve()
         : Promise.reject({ message: 'login.required' }),
     // called when the user clicks on the logout button
@@ -80,7 +80,7 @@ const authProvider = {
                 if (response.status < 200 || response.status >= 300) {
                     throw new Error(response.statusText)
                 } else {
-                    localStorage.removeItem('user')
+                    localStorage.removeItem('auth')
                     return Promise.resolve()
                 }
             })
@@ -91,7 +91,7 @@ const authProvider = {
     },
     getIdentity: () => {
         try {
-            const { id, fullName, avatar } = JSON.parse(localStorage.getItem('user'))
+            const { id, fullName, avatar } = JSON.parse(localStorage.getItem('auth'))
             return Promise.resolve({ id, fullName, avatar })
         } catch (error) {
             return Promise.reject(error)
