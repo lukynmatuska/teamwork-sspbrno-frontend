@@ -41,8 +41,8 @@ const authProvider = {
                     return response.json()
                 }
             })
-            .then(auth => {
-                localStorage.setItem('auth', JSON.stringify(auth.user))
+            .then(response => {
+                localStorage.setItem('user', JSON.stringify(response.user))
             })
             .catch((err) => {
                 console.error(err)
@@ -52,24 +52,46 @@ const authProvider = {
     // called when the API returns an error
     checkError: (error) => {
         if (error.status === 401 || error.status === 403) {
-            localStorage.removeItem('auth')
+            localStorage.removeItem('user')
             return Promise.reject({ redirectTo: '/credentials-required' })
         }
         // other error code (404, 500, etc): no need to log out
         return Promise.resolve()
     },
     // called when the user navigates to a new location, to check for authentication
-    checkAuth: () => localStorage.getItem('auth')
+    checkAuth: () => localStorage.getItem('user')
         ? Promise.resolve()
         : Promise.reject({ message: 'login.required' }),
     // called when the user clicks on the logout button
     logout: () => {
-        localStorage.removeItem('auth')
-        return Promise.resolve()
+        return fetch(API_URL + '/user/logout', {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-cache',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            redirect: 'follow',
+            referrerPolicy: 'no-referrer'
+        })
+            .then(response => {
+                if (response.status < 200 || response.status >= 300) {
+                    throw new Error(response.statusText)
+                } else {
+                    localStorage.removeItem('user')
+                    return Promise.resolve()
+                }
+            })
+            .catch((err) => {
+                console.error(err)
+                throw new Error(`Network error`)
+            })
     },
     getIdentity: () => {
         try {
-            const { id, fullName, avatar } = JSON.parse(localStorage.getItem('auth'))
+            const { id, fullName, avatar } = JSON.parse(localStorage.getItem('user'))
             return Promise.resolve({ id, fullName, avatar })
         } catch (error) {
             return Promise.reject(error)
