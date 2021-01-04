@@ -42,8 +42,8 @@ const authProvider = {
                     return response.json()
                 }
             })
-            .then(auth => {
-                localStorage.setItem('auth', JSON.stringify(auth.user))
+            .then(response => {
+                localStorage.setItem('auth', JSON.stringify(response.user))
             })
             .catch((err) => {
                 console.error(err)
@@ -72,8 +72,30 @@ const authProvider = {
     // called when the user clicks on the logout button
     logout: () => {
         console.log('Loginging out!')
-        localStorage.removeItem('auth')
-        return Promise.resolve()
+        return fetch(API_URL + '/user/logout', {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-cache',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            redirect: 'follow',
+            referrerPolicy: 'no-referrer'
+        })
+            .then(response => {
+                if (response.status < 200 || response.status >= 300) {
+                    throw new Error(response.statusText)
+                } else {
+                    localStorage.removeItem('auth')
+                    return Promise.resolve()
+                }
+            })
+            .catch((err) => {
+                console.error(err)
+                throw new Error(`Network error`)
+            })
     },
     getIdentity: () => {
         try {
