@@ -2,6 +2,7 @@ import { API_URL } from './config'
 const authProvider = {
     // called when the user attempts to log in
     login: ({ username, password }) => {
+        console.log('Logging in!')
         return fetch(API_URL + '/user/login', {
             method: 'POST', // *GET, POST, PUT, DELETE, etc.
             mode: 'cors', // no-cors, *cors, same-origin
@@ -51,6 +52,7 @@ const authProvider = {
     },
     // called when the API returns an error
     checkError: (error) => {
+        console.log('Checking error!')
         if (error.status === 401 || error.status === 403) {
             localStorage.removeItem('auth')
             return Promise.reject({ redirectTo: '/credentials-required' })
@@ -59,17 +61,30 @@ const authProvider = {
         return Promise.resolve()
     },
     // called when the user navigates to a new location, to check for authentication
-    checkAuth: () => localStorage.getItem('auth')
-        ? Promise.resolve()
-        : Promise.reject({ message: 'login.required' }),
+    checkAuth: () => {
+        console.log('Checking auth!')
+        if (!localStorage.getItem('auth')) {
+            return Promise.reject({ message: 'login.required' })
+        } else {
+            return Promise.resolve()
+        }
+    },
     // called when the user clicks on the logout button
     logout: () => {
+        console.log('Loginging out!')
         localStorage.removeItem('auth')
         return Promise.resolve()
     },
     getIdentity: () => {
         try {
-            const { id, fullName, avatar } = JSON.parse(localStorage.getItem('auth'))
+            console.log('Getting identity!')
+            const auth = JSON.parse(localStorage.getItem('auth'))
+            if (auth === undefined) {
+                return Promise.reject(new Error('auth.undefined'))
+            } else if (auth === null) {
+                return Promise.reject(new Error('auth.null'))
+            }
+            const { id, fullName, avatar } = auth
             return Promise.resolve({ id, fullName, avatar })
         } catch (error) {
             return Promise.reject(error)
@@ -77,6 +92,7 @@ const authProvider = {
     },
     // called when the user navigates to a new location, to check for permissions / roles
     getPermissions: () => {
+        console.log('Getting permissions')
         const role = localStorage.getItem('permissions')
         return role ? Promise.resolve(role) : Promise.reject()
     }
